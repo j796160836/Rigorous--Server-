@@ -1,0 +1,15 @@
+//
+// Prefix header for all source files of the 'Rigorous' target in the 'Rigorous' project
+//
+
+#ifdef __OBJC__
+    #import <Cocoa/Cocoa.h>
+#endif
+
+#define KEYPHRASE "WgtQr4XAzwkYBqAir5MbTCEK"
+
+#define TAG_COMMAND 10
+#define READ_TIMEOUT 15.0
+#define READ_TIMEOUT_EXTENSION 10.0
+#define WRITE_TIMEOUT 15.0
+#define WRITE_TIMEOUT_EXTENSION 10.0

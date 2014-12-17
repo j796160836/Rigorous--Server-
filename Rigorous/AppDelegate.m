@@ -12,47 +12,51 @@ static const int ddLogLevel = LOG_LEVEL_VERBOSE;
 
 @implementation AppDelegate
 
-- (void)applicationDidFinishLaunching:(NSNotification *)aNotification
+- (void)applicationDidFinishLaunching:(NSNotification*)aNotification
 {
     isOn = false;
-    
+
     [DDLog addLogger:[DDTTYLogger sharedInstance]];
-	[DDLog addLogger:[DDASLLogger sharedInstance]];
+    [DDLog addLogger:[DDASLLogger sharedInstance]];
 }
 
-- (void)applicationWillTerminate:(NSNotification *)notification
+- (void)applicationWillTerminate:(NSNotification*)notification
 {
     [self stopServer];
 }
 
--(void)awakeFromNib{
+- (void)awakeFromNib
+{
     [[NSUserNotificationCenter defaultUserNotificationCenter] setDelegate:self];
-    
+
     statusItem = [[NSStatusBar systemStatusBar] statusItemWithLength:NSVariableStatusItemLength];
-    
-    NSBundle *bundle = [NSBundle mainBundle];
+
+    NSBundle* bundle = [NSBundle mainBundle];
     statusOnImage = [[NSImage alloc] initWithContentsOfFile:[bundle pathForResource:@"on" ofType:@"png"]];
     statusOffImage = [[NSImage alloc] initWithContentsOfFile:[bundle pathForResource:@"off" ofType:@"png"]];
     statusHighlightImage = [[NSImage alloc] initWithContentsOfFile:[bundle pathForResource:@"highlight" ofType:@"png"]];
-    
+
     [statusItem setImage:statusOffImage];
     [statusItem setAlternateImage:statusHighlightImage];
-    
+
     [statusItem setMenu:statusMenu];
     [statusItem setHighlightMode:YES];
 }
 
-- (BOOL)userNotificationCenter:(NSUserNotificationCenter *)center shouldPresentNotification:(NSUserNotification *)notification{
+- (BOOL)userNotificationCenter:(NSUserNotificationCenter*)center shouldPresentNotification:(NSUserNotification*)notification
+{
     return YES;
 }
 
--(IBAction)switchonoff:(id)sender {
+- (IBAction)switchonoff:(id)sender
+{
     if (isOn == false) {
         [self setupServer];
         isOn = true;
         [statusItem setImage:statusOnImage];
         [menuOnOff setTitle:@"Turn Off"];
-    } else {
+    }
+    else {
         [self stopServer];
         isOn = false;
         [statusItem setImage:statusOffImage];
@@ -64,17 +68,17 @@ static const int ddLogLevel = LOG_LEVEL_VERBOSE;
 {
     asyncSocket = [[GCDAsyncSocket alloc] initWithDelegate:self delegateQueue:dispatch_get_main_queue()];
     connectedSockets = [[NSMutableArray alloc] init];
-    NSError *err = nil;
-	if ([asyncSocket acceptOnPort:0 error:&err])
-	{
-		UInt16 port = [asyncSocket localPort];
-		netService = [[NSNetService alloc] initWithDomain:@"" type:@"_Rigorous._tcp." name:@"" port:port];
-		
-		[netService setDelegate:self];
-		[netService publish];
-	} else {
-		DDLogError(@"Error in acceptOnPort:error: -> %@", err);
-	}
+    NSError* err = nil;
+    if ([asyncSocket acceptOnPort:0 error:&err]) {
+        UInt16 port = [asyncSocket localPort];
+        netService = [[NSNetService alloc] initWithDomain:@"" type:@"_Rigorous._tcp." name:@"" port:port];
+
+        [netService setDelegate:self];
+        [netService publish];
+    }
+    else {
+        DDLogError(@"Error in acceptOnPort:error: -> %@", err);
+    }
 }
 
 - (void)stopServer
@@ -85,53 +89,52 @@ static const int ddLogLevel = LOG_LEVEL_VERBOSE;
     @synchronized(connectedSockets)
     {
         NSUInteger i;
-        for (i = 0; i < [connectedSockets count]; i++)
-        {
+        for (i = 0; i < [connectedSockets count]; i++) {
             [[connectedSockets objectAtIndex:i] disconnect];
         }
         connectedSockets = [[NSMutableArray alloc] init];
     }
 }
 
-- (void)socket:(GCDAsyncSocket *)sock didAcceptNewSocket:(GCDAsyncSocket *)newSocket
+- (void)socket:(GCDAsyncSocket*)sock didAcceptNewSocket:(GCDAsyncSocket*)newSocket
 {
-	DDLogInfo(@"Accepted new socket from %@:%hu", [newSocket connectedHost], [newSocket connectedPort]);
-    
-    NSUserNotification *notification = [[NSUserNotification alloc] init];
+    DDLogInfo(@"Accepted new socket from %@:%hu", [newSocket connectedHost], [newSocket connectedPort]);
+
+    NSUserNotification* notification = [[NSUserNotification alloc] init];
     notification.title = @"Client Connected";
     notification.informativeText = [NSString stringWithFormat:@"A new client connected from %@:%d", [newSocket connectedHost], [newSocket connectedPort]];
     notification.soundName = nil;
     [[NSUserNotificationCenter defaultUserNotificationCenter] deliverNotification:notification];
-	
-	[connectedSockets addObject:newSocket];
+
+    [connectedSockets addObject:newSocket];
     [newSocket readDataWithTimeout:READ_TIMEOUT tag:0];
 }
 
-- (void)socketDidDisconnect:(GCDAsyncSocket *)sock withError:(NSError *)err
+- (void)socketDidDisconnect:(GCDAsyncSocket*)sock withError:(NSError*)err
 {
     DDLogInfo(@"Disconnected a socket");
-        
-    NSUserNotification *notification = [[NSUserNotification alloc] init];
+
+    NSUserNotification* notification = [[NSUserNotification alloc] init];
     notification.title = @"Client Disconnected";
     notification.informativeText = [NSString stringWithFormat:@"A client disconnected"];
     notification.soundName = nil;
     [[NSUserNotificationCenter defaultUserNotificationCenter] deliverNotification:notification];
-    
-	[connectedSockets removeObject:sock];
+
+    [connectedSockets removeObject:sock];
 }
 
-- (void)netServiceDidPublish:(NSNetService *)ns
+- (void)netServiceDidPublish:(NSNetService*)ns
 {
-	DDLogInfo(@"Bonjour Service Published: domain(%@) type(%@) name(%@) port(%i)", [ns domain], [ns type], [ns name], (int)[ns port]);
+    DDLogInfo(@"Bonjour Service Published: domain(%@) type(%@) name(%@) port(%i)", [ns domain], [ns type], [ns name], (int)[ns port]);
 }
 
-- (void)netService:(NSNetService *)ns didNotPublish:(NSDictionary *)errorDict
+- (void)netService:(NSNetService*)ns didNotPublish:(NSDictionary*)errorDict
 {
-	DDLogError(@"Failed to Publish Service: domain(%@) type(%@) name(%@) - %@",
+    DDLogError(@"Failed to Publish Service: domain(%@) type(%@) name(%@) - %@",
                [ns domain], [ns type], [ns name], errorDict);
 }
 
-- (void)socket:(GCDAsyncSocket *)sock didReadData:(NSData *)data withTag:(long)tag
+- (void)socket:(GCDAsyncSocket*)sock didReadData:(NSData*)data withTag:(long)tag
 {
     dispatch_async(dispatch_get_main_queue(), ^{
 		@autoreleasepool {
@@ -160,24 +163,24 @@ static const int ddLogLevel = LOG_LEVEL_VERBOSE;
             [self processCommand:command];
             [sock readDataWithTimeout:READ_TIMEOUT tag:0];
 		}
-	});
+    });
 }
 
-- (NSTimeInterval)socket:(GCDAsyncSocket *)sock shouldTimeoutReadWithTag:(long)tag elapsed:(NSTimeInterval)elapsed bytesDone:(NSUInteger)length
+- (NSTimeInterval)socket:(GCDAsyncSocket*)sock shouldTimeoutReadWithTag:(long)tag elapsed:(NSTimeInterval)elapsed bytesDone:(NSUInteger)length
 {
     DDLogInfo(@"Timeout! Extending read time.");
-    
+
     [sock readDataWithTimeout:READ_TIMEOUT_EXTENSION tag:0];
-		
+
     return READ_TIMEOUT_EXTENSION;
 }
 
-- (NSTimeInterval)socket:(GCDAsyncSocket *)sock shouldTimeoutWriteWithTag:(long)tag elapsed:(NSTimeInterval)elapsed bytesDone:(NSUInteger)length
+- (NSTimeInterval)socket:(GCDAsyncSocket*)sock shouldTimeoutWriteWithTag:(long)tag elapsed:(NSTimeInterval)elapsed bytesDone:(NSUInteger)length
 {
     DDLogInfo(@"Timeout! Extending write time.");
-    
+
     [sock readDataWithTimeout:WRITE_TIMEOUT_EXTENSION tag:0];
-    
+
     return WRITE_TIMEOUT_EXTENSION;
 }
 
@@ -185,174 +188,271 @@ static const int ddLogLevel = LOG_LEVEL_VERBOSE;
 {
     if ([[command objectForKey:@"cmd"] isEqualToString:@"itunes"]) {
         if ([[command objectForKey:@"action"] isEqualToString:@"playpause"]) {
-            iTunesApplication *iTunes = [SBApplication applicationWithBundleIdentifier:@"com.apple.iTunes"];
+            iTunesApplication* iTunes = [SBApplication applicationWithBundleIdentifier:@"com.apple.iTunes"];
             [iTunes playpause];
             return true;
-        } else if ([[command objectForKey:@"action"] isEqualToString:@"nexttrack"]) {
-            iTunesApplication *iTunes = [SBApplication applicationWithBundleIdentifier:@"com.apple.iTunes"];
+        }
+        else if ([[command objectForKey:@"action"] isEqualToString:@"nexttrack"]) {
+            iTunesApplication* iTunes = [SBApplication applicationWithBundleIdentifier:@"com.apple.iTunes"];
             [iTunes nextTrack];
             return true;
-        } else if ([[command objectForKey:@"action"] isEqualToString:@"previoustrack"]) {
-            iTunesApplication *iTunes = [SBApplication applicationWithBundleIdentifier:@"com.apple.iTunes"];
+        }
+        else if ([[command objectForKey:@"action"] isEqualToString:@"previoustrack"]) {
+            iTunesApplication* iTunes = [SBApplication applicationWithBundleIdentifier:@"com.apple.iTunes"];
             [iTunes previousTrack];
             return true;
         }
-    } else if ([[command objectForKey:@"cmd"] isEqualToString:@"safari"]) {
+    }
+    else if ([[command objectForKey:@"cmd"] isEqualToString:@"safari"]) {
         if ([[command objectForKey:@"action"] isEqualToString:@"openurl"]) {
-            SafariApplication *Safari = [SBApplication applicationWithBundleIdentifier:@"com.apple.iTunes"];
+            SafariApplication* Safari = [SBApplication applicationWithBundleIdentifier:@"com.apple.iTunes"];
             [Safari activate];
             [[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:[command objectForKey:@"url"]]];
             return true;
         }
-    } else if ([[command objectForKey:@"cmd"] isEqualToString:@"keynote"]) {
+    }
+    else if ([[command objectForKey:@"cmd"] isEqualToString:@"keynote"]) {
         if ([[command objectForKey:@"action"] isEqualToString:@"nextslide"]) {
-            KeynoteApplication *Keynote = [SBApplication applicationWithBundleIdentifier:@"com.apple.iWork.Keynote"];
-            if ([Keynote slideshows].count > 0) {
-                SBElementArray *temp = [Keynote slideshows];
-                for (int i = 0; i < temp.count; i++) {
-                    KeynoteSlideshow *tempSlideshow = temp[0];
-                    if ([tempSlideshow playing]) {
-                        [tempSlideshow showNext];
+            Keynote5Application* KeynoteApp = [SBApplication applicationWithBundleIdentifier:@"com.apple.iWork.Keynote"];
+            if ([AppDelegate compareVersion:[KeynoteApp version] toVersion:@"6"] == NSOrderedAscending) {
+                // For older version (iWork'09)
+                Keynote5Application* Keynote = KeynoteApp;
+                if ([Keynote slideshows].count > 0) {
+                    SBElementArray* temp = [Keynote slideshows];
+                    for (int i = 0; i < temp.count; i++) {
+                        Keynote5Slideshow* tempSlideshow = temp[0];
+                        if ([tempSlideshow playing]) {
+                            [tempSlideshow showNext];
+                        }
                     }
                 }
             }
-            return true;
-        } else if ([[command objectForKey:@"action"] isEqualToString:@"previousslide"]) {
-            KeynoteApplication *Keynote = [SBApplication applicationWithBundleIdentifier:@"com.apple.iWork.Keynote"];
-            if ([Keynote slideshows].count > 0) {
-                SBElementArray *temp = [Keynote slideshows];
-                for (int i = 0; i < temp.count; i++) {
-                    KeynoteSlideshow *tempSlideshow = temp[i];
-                    if ([tempSlideshow playing]) {
-                        [tempSlideshow showPrevious];
-                    }
-                }
-            }
-            return true;
-        } else if ([[command objectForKey:@"action"] isEqualToString:@"playpause"]) {
-            KeynoteApplication *Keynote = [SBApplication applicationWithBundleIdentifier:@"com.apple.iWork.Keynote"];
-            if ([Keynote slideshows].count > 0) {
-                SBElementArray *temp = [Keynote slideshows];
-                for (int i = 0; i < temp.count; i++) {
-                    KeynoteSlideshow *tempSlideshow = temp[i];
-                    if ([tempSlideshow playing]) {
-                        [tempSlideshow stopSlideshow];
-                    } else {
-                        [tempSlideshow start];
-                    }
+            else {
+                // For new versions
+                KeynoteApplication* Keynote = (KeynoteApplication*)KeynoteApp;
+                if ([self isKeynotePlaying:Keynote]) {
+                    [Keynote showNext];
                 }
             }
             return true;
         }
-    } else if ([[command objectForKey:@"cmd"] isEqualToString:@"powerpoint"]) {
+        else if ([[command objectForKey:@"action"] isEqualToString:@"previousslide"]) {
+            Keynote5Application* KeynoteApp = [SBApplication applicationWithBundleIdentifier:@"com.apple.iWork.Keynote"];
+            if ([AppDelegate compareVersion:[KeynoteApp version] toVersion:@"6"] == NSOrderedAscending) {
+                // For older version (iWork'09)
+                Keynote5Application* Keynote = KeynoteApp;
+                if ([Keynote slideshows].count > 0) {
+                    SBElementArray* temp = [Keynote slideshows];
+                    for (int i = 0; i < temp.count; i++) {
+                        Keynote5Slideshow* tempSlideshow = temp[i];
+                        if ([tempSlideshow playing]) {
+                            [tempSlideshow showPrevious];
+                        }
+                    }
+                }
+            }
+            else {
+                // For new versions
+                KeynoteApplication* Keynote = (KeynoteApplication*)KeynoteApp;
+                if ([self isKeynotePlaying:Keynote]) {
+                    [Keynote showPrevious];
+                }
+            }
+            return true;
+        }
+        else if ([[command objectForKey:@"action"] isEqualToString:@"playpause"]) {
+            Keynote5Application* KeynoteApp = [SBApplication applicationWithBundleIdentifier:@"com.apple.iWork.Keynote"];
+            if ([AppDelegate compareVersion:[KeynoteApp version] toVersion:@"6"] == NSOrderedAscending) {
+                // For older version (iWork'09)
+                Keynote5Application* Keynote = KeynoteApp;
+                if ([Keynote slideshows].count > 0) {
+                    SBElementArray* temp = [Keynote slideshows];
+                    for (int i = 0; i < temp.count; i++) {
+                        Keynote5Slideshow* tempSlideshow = temp[i];
+                        if ([tempSlideshow playing]) {
+                            [tempSlideshow stopSlideshow];
+                        }
+                        else {
+                            [tempSlideshow start];
+                        }
+                    }
+                }
+            }
+            else {
+                // For new versions
+                KeynoteApplication* Keynote = (KeynoteApplication*)KeynoteApp;
+                KeynoteDocument* doc = [self getFrontSlideWindow:Keynote].document;
+                if (![self isKeynotePlaying:Keynote]) {
+                    [doc startFrom:doc.currentSlide];
+                }
+                else {
+                    [doc stop];
+                }
+            }
+            return true;
+        }
+    }
+    else if ([[command objectForKey:@"cmd"] isEqualToString:@"powerpoint"]) {
         if ([[command objectForKey:@"action"] isEqualToString:@"playpause"]) {
-            PowerPointApplication *PowerPoint = [SBApplication applicationWithBundleIdentifier:@"com.microsoft.Powerpoint"];
+            PowerPointApplication* PowerPoint = [SBApplication applicationWithBundleIdentifier:@"com.microsoft.Powerpoint"];
             if (currentSlideShow == nil) {
                 if ([PowerPoint presentations].count > 0) {
-                    PowerPointDocumentWindow *tempDocWindow = [PowerPoint activeWindow];
-                    PowerPointPresentation *tempPresentation = [tempDocWindow presentation];
-                    PowerPointSlideShowSettings *tempSettings = [tempPresentation slideShowSettings];
-                    PowerPointSlideShowWindow *tempWindow = [tempSettings runSlideShow];
+                    PowerPointDocumentWindow* tempDocWindow = [PowerPoint activeWindow];
+                    PowerPointPresentation* tempPresentation = [tempDocWindow presentation];
+                    PowerPointSlideShowSettings* tempSettings = [tempPresentation slideShowSettings];
+                    PowerPointSlideShowWindow* tempWindow = [tempSettings runSlideShow];
                     currentSlideShow = [tempWindow slideshowView];
                 }
-            } else {
+            }
+            else {
                 [currentSlideShow exitSlideShow];
                 currentSlideShow = nil;
             }
-        } else if ([[command objectForKey:@"action"] isEqualToString:@"nextslide"]) {
+        }
+        else if ([[command objectForKey:@"action"] isEqualToString:@"nextslide"]) {
             if (currentSlideShow != nil) {
                 [currentSlideShow goToNextSlide];
             }
-        } else if ([[command objectForKey:@"action"] isEqualToString:@"previousslide"]) {
+        }
+        else if ([[command objectForKey:@"action"] isEqualToString:@"previousslide"]) {
             if (currentSlideShow != nil) {
                 [currentSlideShow goToPreviousSlide];
             }
         }
         return true;
-    } else if ([[command objectForKey:@"cmd"] isEqualToString:@"vlc"]) {
+    }
+    else if ([[command objectForKey:@"cmd"] isEqualToString:@"vlc"]) {
         if ([[command objectForKey:@"action"] isEqualToString:@"playpause"]) {
-            VLCApplication *VLC = [SBApplication applicationWithBundleIdentifier:@"org.videolan.vlc"];
-            SBElementArray *temp = [VLC windows];
+            VLCApplication* VLC = [SBApplication applicationWithBundleIdentifier:@"org.videolan.vlc"];
+            SBElementArray* temp = [VLC windows];
             for (int i = 0; i < temp.count; i++) {
-                VLCWindow *tempWindow = temp[i];
+                VLCWindow* tempWindow = temp[i];
                 if ([tempWindow visible]) {
-                    VLCDocument *tempDocument = [tempWindow document];
+                    VLCDocument* tempDocument = [tempWindow document];
                     [tempDocument play];
                 }
             }
-        } else if ([[command objectForKey:@"action"] isEqualToString:@"mute"]) {
-            VLCApplication *VLC = [SBApplication applicationWithBundleIdentifier:@"org.videolan.vlc"];
-            SBElementArray *temp = [VLC windows];
+        }
+        else if ([[command objectForKey:@"action"] isEqualToString:@"mute"]) {
+            VLCApplication* VLC = [SBApplication applicationWithBundleIdentifier:@"org.videolan.vlc"];
+            SBElementArray* temp = [VLC windows];
             for (int i = 0; i < temp.count; i++) {
-                VLCWindow *tempWindow = temp[i];
+                VLCWindow* tempWindow = temp[i];
                 if ([tempWindow visible]) {
-                    VLCDocument *tempDocument = [tempWindow document];
+                    VLCDocument* tempDocument = [tempWindow document];
                     [tempDocument mute];
                 }
             }
-        } else if ([[command objectForKey:@"action"] isEqualToString:@"stop"]) {
-            VLCApplication *VLC = [SBApplication applicationWithBundleIdentifier:@"org.videolan.vlc"];
-            SBElementArray *temp = [VLC windows];
+        }
+        else if ([[command objectForKey:@"action"] isEqualToString:@"stop"]) {
+            VLCApplication* VLC = [SBApplication applicationWithBundleIdentifier:@"org.videolan.vlc"];
+            SBElementArray* temp = [VLC windows];
             for (int i = 0; i < temp.count; i++) {
-                VLCWindow *tempWindow = temp[i];
+                VLCWindow* tempWindow = temp[i];
                 if ([tempWindow visible]) {
-                    VLCDocument *tempDocument = [tempWindow document];
+                    VLCDocument* tempDocument = [tempWindow document];
                     [tempDocument stop];
                 }
             }
-        } else if ([[command objectForKey:@"action"] isEqualToString:@"volumeup"]) {
-            VLCApplication *VLC = [SBApplication applicationWithBundleIdentifier:@"org.videolan.vlc"];
-            SBElementArray *temp = [VLC windows];
+        }
+        else if ([[command objectForKey:@"action"] isEqualToString:@"volumeup"]) {
+            VLCApplication* VLC = [SBApplication applicationWithBundleIdentifier:@"org.videolan.vlc"];
+            SBElementArray* temp = [VLC windows];
             for (int i = 0; i < temp.count; i++) {
-                VLCWindow *tempWindow = temp[i];
+                VLCWindow* tempWindow = temp[i];
                 if ([tempWindow visible]) {
-                    VLCDocument *tempDocument = [tempWindow document];
+                    VLCDocument* tempDocument = [tempWindow document];
                     [tempDocument volumeUp];
                 }
             }
-        } else if ([[command objectForKey:@"action"] isEqualToString:@"volumedown"]) {
-            VLCApplication *VLC = [SBApplication applicationWithBundleIdentifier:@"org.videolan.vlc"];
-            SBElementArray *temp = [VLC windows];
+        }
+        else if ([[command objectForKey:@"action"] isEqualToString:@"volumedown"]) {
+            VLCApplication* VLC = [SBApplication applicationWithBundleIdentifier:@"org.videolan.vlc"];
+            SBElementArray* temp = [VLC windows];
             for (int i = 0; i < temp.count; i++) {
-                VLCWindow *tempWindow = temp[i];
+                VLCWindow* tempWindow = temp[i];
                 if ([tempWindow visible]) {
-                    VLCDocument *tempDocument = [tempWindow document];
+                    VLCDocument* tempDocument = [tempWindow document];
                     [tempDocument volumeDown];
                 }
             }
-        } else if ([[command objectForKey:@"action"] isEqualToString:@"fullscreen"]) {
-            VLCApplication *VLC = [SBApplication applicationWithBundleIdentifier:@"org.videolan.vlc"];
-            SBElementArray *temp = [VLC windows];
+        }
+        else if ([[command objectForKey:@"action"] isEqualToString:@"fullscreen"]) {
+            VLCApplication* VLC = [SBApplication applicationWithBundleIdentifier:@"org.videolan.vlc"];
+            SBElementArray* temp = [VLC windows];
             for (int i = 0; i < temp.count; i++) {
-                VLCWindow *tempWindow = temp[i];
+                VLCWindow* tempWindow = temp[i];
                 if ([tempWindow visible]) {
-                    VLCDocument *tempDocument = [tempWindow document];
+                    VLCDocument* tempDocument = [tempWindow document];
                     [tempDocument fullscreen];
                 }
             }
         }
         return true;
-    } else if ([[command objectForKey:@"cmd"] isEqualToString:@"safari"]) {
+    }
+    else if ([[command objectForKey:@"cmd"] isEqualToString:@"safari"]) {
         if ([[command objectForKey:@"action"] isEqualToString:@"openurl"]) {
-            SafariApplication *Safari = [SBApplication applicationWithBundleIdentifier:@"com.apple.safari"];
+            SafariApplication* Safari = [SBApplication applicationWithBundleIdentifier:@"com.apple.safari"];
             [Safari activate];
-            NSWorkspace * ws = [NSWorkspace sharedWorkspace];
-            [ws openURL: [NSURL URLWithString:[command objectForKey:@"url"]]];
+            NSWorkspace* ws = [NSWorkspace sharedWorkspace];
+            [ws openURL:[NSURL URLWithString:[command objectForKey:@"url"]]];
         }
     }
     return false;
 }
 
-- (void)sendMessage:(NSString *)msg
+- (BOOL)isKeynotePlaying:(KeynoteApplication*)Keynote
+{
+    return [[Keynote performSelector:@selector(playing) withObject:nil] boolValue];
+}
+
+- (KeynoteWindow*)getFrontSlideWindow:(KeynoteApplication*)Keynote
+{
+    SBElementArray* windows = Keynote.windows;
+    //    NSLog(@"%lu", (unsigned long)windows.count);
+    for (NSInteger i = 0; i < windows.count; i++) {
+        KeynoteWindow* wi = windows[i];
+        //        NSLog(@"%ld = %@", (long)i, wi.document.name);
+        if (wi.document.name != nil) {
+            return wi;
+        }
+    }
+    return nil;
+}
+
++ (NSComparisonResult)compareVersion:(NSString*)versionOne toVersion:(NSString*)versionTwo
+{
+    NSArray* versionOneComp = [versionOne componentsSeparatedByString:@"."];
+    NSArray* versionTwoComp = [versionTwo componentsSeparatedByString:@"."];
+
+    NSInteger pos = 0;
+
+    while ([versionOneComp count] > pos || [versionTwoComp count] > pos) {
+        NSInteger v1 = [versionOneComp count] > pos ? [[versionOneComp objectAtIndex:pos] integerValue] : 0;
+        NSInteger v2 = [versionTwoComp count] > pos ? [[versionTwoComp objectAtIndex:pos] integerValue] : 0;
+        if (v1 < v2) {
+            return NSOrderedAscending;
+        }
+        else if (v1 > v2) {
+            return NSOrderedDescending;
+        }
+        pos++;
+    }
+
+    return NSOrderedSame;
+}
+
+- (void)sendMessage:(NSString*)msg
 {
     NSLog(@"Message to send: %@", msg);
-    NSString *message = [NSString stringWithFormat:@"%@ \n", msg];
-    NSString *encryptedData = [AESCrypt encrypt:message password:@KEYPHRASE];
-    NSData* data = [encryptedData dataUsingEncoding: NSASCIIStringEncoding];
+    NSString* message = [NSString stringWithFormat:@"%@ \n", msg];
+    NSString* encryptedData = [AESCrypt encrypt:message password:@KEYPHRASE];
+    NSData* data = [encryptedData dataUsingEncoding:NSASCIIStringEncoding];
     [asyncSocket writeData:data withTimeout:WRITE_TIMEOUT tag:0];
 }
 
-- (IBAction)quitapp:(id)sender {
+- (IBAction)quitapp:(id)sender
+{
     if (isOn == true) {
         isOn = false;
         [self stopServer];

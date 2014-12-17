@@ -57,7 +57,7 @@
 		4A04F884167E2A39000BA812 /* NSData+CommonCrypto.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSData+CommonCrypto.m"; sourceTree = "<group>"; };
 		4A04F885167E2A39000BA812 /* NSString+Base64.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSString+Base64.h"; sourceTree = "<group>"; };
 		4A04F886167E2A39000BA812 /* NSString+Base64.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSString+Base64.m"; sourceTree = "<group>"; };
-		4A04F88B167E2CE1000BA812 /* Keynote.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Keynote.h; sourceTree = "<group>"; };
+		4A04F88B167E2CE1000BA812 /* Keynote5.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Keynote5.h; sourceTree = "<group>"; };
 		4A0641F1168B47240029498F /* PowerPoint.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PowerPoint.h; sourceTree = "<group>"; };
 		4A508A0A168B564C00EAB60B /* VLC.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VLC.h; sourceTree = "<group>"; };
 		4A724B7F167D4579000B26A4 /* iTunes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = iTunes.h; sourceTree = "<group>"; };
@@ -101,6 +101,7 @@
 		4AE6046A167E033500507599 /* DispatchQueueLogFormatter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DispatchQueueLogFormatter.h; sourceTree = "<group>"; };
 		4AE6046B167E033500507599 /* DispatchQueueLogFormatter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DispatchQueueLogFormatter.m; sourceTree = "<group>"; };
 		4AE6046C167E033500507599 /* README.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = README.txt; sourceTree = "<group>"; };
+		B2F68FF91A4138EC00DAD0C4 /* Keynote.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Keynote.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -136,7 +137,8 @@
 		4A724B7E167D4568000B26A4 /* Apple Event */ = {
 			isa = PBXGroup;
 			children = (
-				4A04F88B167E2CE1000BA812 /* Keynote.h */,
+				4A04F88B167E2CE1000BA812 /* Keynote5.h */,
+				B2F68FF91A4138EC00DAD0C4 /* Keynote.h */,
 				4A724B8B167D4B85000B26A4 /* Safari.h */,
 				4A724B7F167D4579000B26A4 /* iTunes.h */,
 				4A0641F1168B47240029498F /* PowerPoint.h */,
@@ -285,7 +287,7 @@
 		4ACF5A69167BE73A00D27361 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0450;
+				LastUpgradeCheck = 0620;
 				ORGANIZATIONNAME = "Phil Plückthun";
 			};
 			buildConfigurationList = 4ACF5A6C167BE73A00D27361 /* Build configuration list for PBXProject "Rigorous" */;

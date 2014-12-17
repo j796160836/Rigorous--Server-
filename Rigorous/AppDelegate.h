@@ -16,6 +16,7 @@
 
 #import "iTunes.h"
 #import "Safari.h"
+#import "Keynote5.h"
 #import "Keynote.h"
 #import "PowerPoint.h"
 #import "VLC.h"
